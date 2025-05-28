@@ -8,7 +8,7 @@ ApplicationWindow {
     visible: true
     width: 800
     height: 600
-    title: "Drawer Navigation Example"
+    title: "Aircraft Ha Noi"
 
     Plugin {
         id: osmPlugin
@@ -25,87 +25,48 @@ ApplicationWindow {
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: pageHome // Màn hình ban đầu
-
-        // Chuyển đến màn hình khi chọn một mục trong Drawer
-        function navigateTo(page) {
-            stackView.push(page)
-        }
+        initialItem: pageHome
     }
 
-    // Drawer cho các mục điều hướng
-    Drawer {
-        id: drawer
-        width: parent.width * 0.75
-        height: parent.height
-        clip: true
 
-        // Nội dung của Drawer
-        ListView {
-            width: drawer.width
-            height: parent.height
+    ToolBar {
+        id: toolbar
+        anchors.top: parent.top
+        width: parent.width
 
-            model: ListModel {
-                ListElement { name: "Home" }
-                ListElement { name: "Settings" }
-                ListElement { name: "About" }
+        Row{
+            spacing: 10
+            anchors.centerIn: parent
+
+            Button{
+                text:"Home"
+                onClicked: {
+                    if(stackView.currentItem !== stackView.find(pageHome)){
+                        stackView.replace(pageHome)
+                    }
+                }
             }
 
-            delegate: Item {
-                width: parent.width
-                height: 60
-
-                Rectangle {
-                    width: parent.width
-                    height: 60
-                    color: "lightgray"
-                    border.color: "black"
-                    radius: 5
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: model.name
+            Button{
+                text: "Settings"
+                onClicked: {
+                    if(stackView.currentItem !== stackView.find(pageSettings)){
+                        stackView.replace(pageSettings)
                     }
+                }
+            }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            if (model.name === "Home") {
-                                stackView.replace(pageHome)
-                            } else if (model.name === "Settings") {
-                                stackView.replace(pageSettings)
-                            } else if (model.name === "About") {
-                                stackView.replace(pageAbout)
-                            }
-                            drawer.close()
-                        }
+            Button{
+                text:"About"
+                onClicked: {
+                    if(stackView.currentItem !== stackView.find(pageAbout)){
+                        stackView.replace(pageAbout)
                     }
                 }
             }
         }
     }
 
-    // Header với nút Drawer
-    ToolBar {
-        id: toolbar
-        anchors.top: parent.top
-        width: parent.width
-
-        ToolButton {
-            text: "☰"  // Nút Drawer
-            onClicked: drawer.open()
-        }
-
-        ToolButton {
-            text: "Home"
-            anchors.right: parent.right
-            onClicked: {
-                stackView.push(pageHome)
-            }
-        }
-    }
-
-    // Các màn hình của ứng dụng
     Page {
         id: pageHome
         Map {
@@ -115,6 +76,12 @@ ApplicationWindow {
             center: QtPositioning.coordinate(21.0285, 105.8542) // Hà Nội
             zoomLevel: 12
             activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
+            MapPolygon {
+                path: hanoiPolygon
+                color: "#2200ff00"
+                border.width: 2
+                border.color: "green"
+            }
         }
     }
 
