@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-a0b25edbe65b7f1ee8cb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.14"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "aircraft_hanoi",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "aircraft_hanoi::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-aircraft_hanoi-Debug-f546e6cf91072080393b.json",
+					"name" : "aircraft_hanoi",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "aircraft_hanoi_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-aircraft_hanoi_autogen-Debug-b93ebc2d3e031947bfa0.json",
+					"name" : "aircraft_hanoi_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "aircraft_hanoi_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-aircraft_hanoi_autogen_timestamp_deps-Debug-e1b3faa9cde6253bbb3f.json",
+					"name" : "aircraft_hanoi_autogen_timestamp_deps",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug",
+		"source" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"BUILD_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug/aircraft_hanoi_autogen",
+	"CMAKE_BINARY_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi",
+	"CMAKE_SOURCE_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi",
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug/aircraft_hanoi_autogen/include",
+	"INPUTS" : [ "/home/domanhcuong/development/C++/QT/aircraft_hanoi/main.qml" ],
+	"LOCK_FILE" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug/CMakeFiles/aircraft_hanoi_autogen.dir/AutoRcc_qml_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "-name", "qml" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_qml.cpp",
+	"RCC_EXECUTABLE" : "/usr/lib/qt5/bin/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/build/Desktop-Debug/CMakeFiles/aircraft_hanoi_autogen.dir/AutoRcc_qml_EWIEGA46WW_Used.txt",
+	"SOURCE" : "/home/domanhcuong/development/C++/QT/aircraft_hanoi/qml.qrc",
+	"VERBOSITY" : 0
+}
