@@ -1,5 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QGeoCoordinate>
+#include <QQmlContext>
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +21,14 @@ int main(int argc, char *argv[])
                 QCoreApplication::exit(-1);
         },
         Qt::QueuedConnection);
+    QList<QGeoCoordinate> hanoiPolygon = {
+        {21.0, 105.8},
+        {21.0, 105.9},
+        {21.1, 105.9},
+        {21.1, 105.8},
+        {21.0, 105.8}
+    };
+    engine.rootContext()->setContextProperty("hanoiPolygon", QVariant::fromValue(hanoiPolygon));
     engine.load(url);
 
     return app.exec();
