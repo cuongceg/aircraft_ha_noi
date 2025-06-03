@@ -73,15 +73,52 @@ ApplicationWindow {
             id: mapview
             anchors.fill: parent
             plugin: osmPlugin
-            center: QtPositioning.coordinate(21.0285, 105.8542) // Hà Nội
-            zoomLevel: 12
-            activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
-            MapPolygon {
-                path: hanoiPolygon
-                color: "#2200ff00"
-                border.width: 2
-                border.color: "green"
-            }
+            // center: QtPositioning.coordinate(21.0285, 105.8542) // Hà Nội
+            // zoomLevel: 12
+            center: QtPositioning.coordinate(21.0285, 105.8542)
+            zoomLevel: 7
+            //activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
+            // MapPolygon {
+            //     path: hanoiPolygon
+            //     color: "#2200ff00"
+            //     border.width: 2
+            //     border.color: "green"
+            // }
+            Repeater {
+                        model: aircraftModel
+                        delegate: MapQuickItem {
+                            coordinate: model.coordinate
+                            anchorPoint.x: 5
+                            anchorPoint.y: 5
+
+                            sourceItem: Image {
+                                source: "qrc:/assets/aircraft.png"
+                                width: 24
+                                height: 24
+                            }
+                        }
+                    }
+
+            // Repeater {
+            //     model: aircraftManager.aircrafts
+            //     delegate: MapCircle {
+            //         center: modelData
+            //         radius: 1000  // meters
+            //         color: 'green'
+            //         Component.onCompleted: console.log("Add aircraft at", modelData)
+            //     }
+            //     // MapQuickItem {
+            //     //     coordinate: modelData
+            //     //     sourceItem: Rectangle {
+            //     //         width: 10
+            //     //         height: 10
+            //     //         color: "blue"
+            //     //         radius: 50
+            //     //     }
+
+
+            //     // }
+            // }
         }
     }
 
