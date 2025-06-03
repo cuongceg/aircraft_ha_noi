@@ -13,7 +13,7 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Quick Positioning)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Quick Positioning)
 
 set(PROJECT_SOURCES
-        main.cpp
+        src/main.cpp
         qml.qrc
 )
 
@@ -36,6 +36,10 @@ else()
     else()
         add_executable(aircraft_hanoi
           ${PROJECT_SOURCES}
+          src/PolygonLoader.h
+          src/PolygonLoader.cpp
+          src/AirCraftManager.h
+          src/AirCraftManager.cpp
         )
     endif()
 endif()
