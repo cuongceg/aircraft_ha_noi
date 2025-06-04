@@ -4,9 +4,12 @@
 #pragma once
 #include <QAbstractListModel>
 #include <QGeoCoordinate>
+#include<QDebug>
 
 struct AircraftData {
     QGeoCoordinate coordinate;
+    double rotation=0.0;
+    bool isInsideHanoi=false;
 };
 
 class AircraftModel : public QAbstractListModel
@@ -15,6 +18,8 @@ class AircraftModel : public QAbstractListModel
 public:
     enum Roles {
         CoordinateRole = Qt::UserRole + 1,
+        InsideHanoiRole,
+        RotationRole
     };
 
     explicit AircraftModel(QObject *parent = nullptr);
@@ -25,11 +30,13 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void updatePositions();
+    void setPolygon(QList<QGeoCoordinate>& hanoiPolygon);
 
 private:
     QList<AircraftData> m_aircrafts;
-    QList<QGeoCoordinate> m_pathPoints; // điểm start->end
-    QList<double> m_progress; // tiến độ di chuyển của từng máy bay
+    QList<QGeoCoordinate> m_pathPoints;
+    QList<double> m_progress;
+    QList<QGeoCoordinate> m_hanoiPolygon;
 };
 
 #endif // AIRCRAFT_H
