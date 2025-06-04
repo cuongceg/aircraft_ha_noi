@@ -2,5 +2,9 @@
     <qresource prefix="/">
         <file>qml/main.qml</file>
         <file>assets/aircraft.png</file>
+        <file>assets/aircraft_green.png</file>
+        <file>assets/aircraft_red.png</file>
+        <file>assets/aircraft_orange.png</file>
+        <file>assets/aircraft_blue.png</file>
     </qresource>
 </RCC>
