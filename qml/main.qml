@@ -10,6 +10,9 @@ ApplicationWindow {
     height: 600
     title: "Aircraft Ha Noi"
 
+    property int selectedAircraftIndex: -1
+    property var selectedCoordinate: undefined
+
     Plugin {
         id: osmPlugin
         name: "osm"
@@ -73,52 +76,82 @@ ApplicationWindow {
             id: mapview
             anchors.fill: parent
             plugin: osmPlugin
-            // center: QtPositioning.coordinate(21.0285, 105.8542) // Hà Nội
-            // zoomLevel: 12
             center: QtPositioning.coordinate(21.0285, 105.8542)
             zoomLevel: 7
-            //activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
-            // MapPolygon {
-            //     path: hanoiPolygon
-            //     color: "#2200ff00"
-            //     border.width: 2
-            //     border.color: "green"
-            // }
+            activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
+            MouseArea{
+                anchors.fill: parent
+                z:1
+                acceptedButtons: Qt.LeftButton
+                onClicked:{
+                    selectedAircraftIndex=-1
+                    selectedCoordinate=undefined
+                }
+            }
+            MapPolygon {
+                path: hanoiPolygon
+                color: "#2200ff00"
+                border.width: 2
+                border.color: "green"
+            }
             Repeater {
-                        model: aircraftModel
-                        delegate: MapQuickItem {
-                            coordinate: model.coordinate
-                            anchorPoint.x: 5
-                            anchorPoint.y: 5
+                model: aircraftModel
+                delegate: MapQuickItem {
+                    coordinate: model.coordinate
+                    z:2
+                    rotation: model.rotation
+                    anchorPoint.x: image.width / 2
+                    anchorPoint.y: image.height / 2
 
-                            sourceItem: Image {
-                                source: "qrc:/assets/aircraft.png"
-                                width: 24
-                                height: 24
+                    sourceItem: Image {
+                        id:image
+                        source: model.insideHanoi ? (selectedAircraftIndex !== index  ? "qrc:/assets/aircraft_red.png" : "qrc:/assets/aircraft_orange.png")
+                                                  : (selectedAircraftIndex !== index ? "qrc:/assets/aircraft_green.png" :"qrc:/assets/aircraft_blue.png")
+                        width: 30
+                        height: 30
+                        smooth: true
+                        antialiasing: true
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        z:3
+                        onClicked: {
+                            if (selectedAircraftIndex === index) {
+                                selectedAircraftIndex = -1;
+                                selectedCoordinate = undefined;
+                            } else {
+                                selectedAircraftIndex = index;
+                                selectedCoordinate = model.coordinate;
                             }
                         }
                     }
 
-            // Repeater {
-            //     model: aircraftManager.aircrafts
-            //     delegate: MapCircle {
-            //         center: modelData
-            //         radius: 1000  // meters
-            //         color: 'green'
-            //         Component.onCompleted: console.log("Add aircraft at", modelData)
-            //     }
-            //     // MapQuickItem {
-            //     //     coordinate: modelData
-            //     //     sourceItem: Rectangle {
-            //     //         width: 10
-            //     //         height: 10
-            //     //         color: "blue"
-            //     //         radius: 50
-            //     //     }
+                    onCoordinateChanged: {
+                        if (index === selectedAircraftIndex)
+                            selectedCoordinate = coordinate;
+                    }
+                }
+            }
 
+            Rectangle {
+                id: statusBar
+                width: parent.width
+                height: 30
+                color: "#222"
+                opacity: selectedAircraftIndex >= 0 ? 0.9 : 0
+                anchors.bottom: parent.bottom
+                z: 100
 
-            //     // }
-            // }
+                Label {
+                    anchors.centerIn: parent
+                    text: selectedCoordinate
+                          ? "Kinh độ: " + selectedCoordinate.longitude.toFixed(5) +
+                            "  |  Vĩ độ: " + selectedCoordinate.latitude.toFixed(5)
+                          : ""
+                    color: "white"
+                }
+            }
+
         }
     }
 
