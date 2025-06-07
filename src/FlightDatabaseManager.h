@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QGeoCoordinate>
-#include "AircraftManager.h"
+#include "Flight.h"
 class FlightDatabaseManager : public QObject
 {
     Q_OBJECT
@@ -15,8 +15,8 @@ public:
                            const QString &dbName,
                            const QString &user, const QString &password);
 
-    bool insertFlight(const AircraftData &flight);
-    QList<AircraftData> loadAllFlights();
+    bool insertFlight(const Flight &flight);
+    QList<Flight> loadAllFlights();
 
 private:
     QSqlDatabase m_db;
