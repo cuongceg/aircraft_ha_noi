@@ -28,10 +28,10 @@ bool FlightDatabaseManager::connectToDatabase(const QString &host, int port,
     return true;
 }
 
-bool FlightDatabaseManager::insertFlight(const AircraftData &flight) {
+bool FlightDatabaseManager::insertFlight(const Flight &flight) {
     QString queryStr = R"(
-        INSERT INTO flight (id, plan_id, start_point, end_point, in_time, out_time, routes)
-        VALUES (:id, :plan_id,
+        INSERT INTO flight (plan_id, start_point, end_point, in_time, out_time, routes)
+        VALUES (:plan_id,
                 ST_GeomFromText(:start_wkt, 4326),
                 ST_GeomFromText(:end_wkt, 4326),
                 :in_time, :out_time,
@@ -40,7 +40,6 @@ bool FlightDatabaseManager::insertFlight(const AircraftData &flight) {
 
     QSqlQuery query;
     query.prepare(queryStr);
-    query.bindValue(":id", flight.id);
     query.bindValue(":plan_id", flight.planId);
     query.bindValue(":start_wkt", geoCoordinateToWKT(flight.startPoint));
     query.bindValue(":end_wkt", geoCoordinateToWKT(flight.endPoint));
@@ -55,13 +54,13 @@ bool FlightDatabaseManager::insertFlight(const AircraftData &flight) {
     return true;
 }
 
-QList<AircraftData> FlightDatabaseManager::loadAllFlights() {
-    QList<AircraftData> flights;
+QList<Flight> FlightDatabaseManager::loadAllFlights() {
+    QList<Flight> flights;
 
     QSqlQuery query("SELECT id, plan_id, ST_AsText(start_point), ST_AsText(end_point), in_time, out_time, ST_AsText(routes) FROM flight");
     while (query.next()) {
-        AircraftData flight;
-        flight.id = query.value(0).toString();
+        Flight flight;
+        flight.id = query.value(0).toInt();
         flight.planId = query.value(1).toString();
         flight.startPoint = parseWKTPoint(query.value(2).toString());
         flight.endPoint = parseWKTPoint(query.value(3).toString());
