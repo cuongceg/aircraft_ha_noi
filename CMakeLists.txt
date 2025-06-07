@@ -38,10 +38,12 @@ else()
           ${PROJECT_SOURCES}
           src/PolygonLoader.h
           src/PolygonLoader.cpp
-          src/AirCraftManager.h
-          src/AirCraftManager.cpp
+          src/AircraftManager.h
+          src/AircraftManager.cpp
           src/GeoUtils.h
           src/GeoUtils.cpp
+          src/FlightDatabaseManager.h
+          src/FlightDatabaseManager.cpp
         )
     endif()
 endif()
