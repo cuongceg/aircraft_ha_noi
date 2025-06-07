@@ -6,5 +6,7 @@
         <file>assets/aircraft_red.png</file>
         <file>assets/aircraft_orange.png</file>
         <file>assets/aircraft_blue.png</file>
+        <file>assets/marker_begin.png</file>
+        <file>assets/marker_end.png</file>
     </qresource>
 </RCC>
