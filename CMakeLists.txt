@@ -44,6 +44,9 @@ else()
           src/GeoUtils.cpp
           src/FlightDatabaseManager.h
           src/FlightDatabaseManager.cpp
+          src/Flight.h
+          src/FlightModel.h
+          src/FlightModel.cpp
         )
     endif()
 endif()

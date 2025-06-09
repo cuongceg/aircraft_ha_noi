@@ -2,6 +2,7 @@
 #define FLIGHTMODEL_H
 #include <QAbstractListModel>
 #include <QDateTime>
+#include <QDebug>
 #include "Flight.h"
 class FlightModel : public QAbstractListModel
 {
@@ -11,7 +12,10 @@ public:
         FlightIdRole = Qt::UserRole + 1,
         AircraftIdRole,
         InTimeRole,
-        OutTimeRole
+        OutTimeRole,
+        RouteRole,
+        StartPointRole,
+        EndPointRole
     };
 
     explicit FlightModel(QObject *parent = nullptr);
@@ -21,6 +25,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void loadFlights();
+    Q_INVOKABLE void searchFlights(QString planeId,QDate date);
 
 private:
     QList<Flight> m_flights;
