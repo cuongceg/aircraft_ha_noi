@@ -1,5 +1,6 @@
 #include "FlightDatabaseManager.h"
 #include "GeoUtils.h"
+#include "AircraftManager.h"
 #include <QtMath>
 
 AircraftModel::AircraftModel(QObject *parent) : QAbstractListModel(parent)
@@ -9,8 +10,19 @@ AircraftModel::AircraftModel(QObject *parent) : QAbstractListModel(parent)
     QList<QGeoCoordinate> routes = {startPoint};
     double rotation = qAtan2(endPoint.longitude() - startPoint.longitude(),
                              endPoint.latitude()  - startPoint.latitude()) * 180.0 / M_PI;
+
+    QGeoCoordinate startPoint2 = QGeoCoordinate(18.76,105.63);
+    QGeoCoordinate endPoint2 = QGeoCoordinate(22.09,105.52);
+    QList<QGeoCoordinate> routes2 = {startPoint2};
+    double rotation2 = qAtan2(endPoint2.longitude() - startPoint2.longitude(),
+                             endPoint2.latitude()  - startPoint2.latitude()) * 180.0 / M_PI;
+
     m_aircrafts.append({"VDT001","SE1",startPoint,endPoint,QDateTime::currentDateTime(),QDateTime::currentDateTime(),startPoint,rotation,routes});
+    m_aircrafts.append({"VDT002","SE2",startPoint2,endPoint2,QDateTime::currentDateTime(),QDateTime::currentDateTime(),startPoint2,rotation2,routes2});
     m_progress.append(0.0);
+    m_progress.append(0.0);
+    m_running.append(false);
+    m_running.append(false);
 }
 
 int AircraftModel::rowCount(const QModelIndex &parent) const
@@ -54,13 +66,27 @@ QHash<int, QByteArray> AircraftModel::roleNames() const
 void AircraftModel::updatePositions()
 {
     for (int i = 0; i < m_aircrafts.size(); ++i) {
-        AircraftData aircraft = m_aircrafts[i];
-        m_progress[i] += 0.1;
-        if (m_progress[i] > 1.0){
-            // FlightDatabaseManager dbManager;
-            // dbManager.insertFlight(aircraft);
+        if (!m_running[i]) continue;
+
+        if (m_progress[i] >= 1.0){
+            if(!m_aircrafts[i].isFinished){
+                m_running[i] = false;
+                m_aircrafts[i].isFinished=true;
+                AircraftData aircraft = m_aircrafts[i];
+                FlightDatabaseManager dbManager;
+                Flight flight;
+                flight.startPoint= aircraft.startPoint;
+                flight.endPoint = aircraft.endPoint;
+                flight.planId = aircraft.planId;
+                flight.route = aircraft.route;
+                flight.inTime= aircraft.inTime;
+                flight.outTime = aircraft.outTime;
+                dbManager.insertFlight(flight);
+            }
             continue;
         }
+        AircraftData &aircraft = m_aircrafts[i]; // sửa từ bản sao sang tham chiếu
+        m_progress[i] += 0.1;
 
         const QGeoCoordinate &start = aircraft.startPoint;
         const QGeoCoordinate &end = aircraft.endPoint;
@@ -68,31 +94,58 @@ void AircraftModel::updatePositions()
         QGeoCoordinate newPos(
             start.latitude() + (end.latitude() - start.latitude()) * m_progress[i],
             start.longitude() + (end.longitude() - start.longitude()) * m_progress[i]
-        );
+            );
 
         if (aircraft.currentCoordinate != newPos) {
-            m_aircrafts[i].currentCoordinate = newPos;
-            m_aircrafts[i].route.append(newPos);
-            if(isPointInPolygon(newPos,m_hanoiPolygon) && !aircraft.isInsideHanoi){
-                m_aircrafts[i].isInsideHanoi = true;
-                m_aircrafts[i].inTime = QDateTime::currentDateTime();
-                m_aircrafts[i].outTime = QDateTime::currentDateTime();
-                qDebug() << "Aircraft is inside Hanoi";
-            }else if(!isPointInPolygon(newPos,m_hanoiPolygon) && aircraft.isInsideHanoi){
-                m_aircrafts[i].isInsideHanoi = false;
-                m_aircrafts[i].outTime = QDateTime::currentDateTime();
-                qDebug() << "Outside Hanoi";
+            aircraft.currentCoordinate = newPos;
+            aircraft.route.append(newPos);
+
+            if (isPointInPolygon(newPos, m_hanoiPolygon) && !aircraft.isInsideHanoi) {
+                aircraft.isInsideHanoi = true;
+                aircraft.inTime = QDateTime::currentDateTime();
+                aircraft.outTime = QDateTime::currentDateTime();
+                qDebug() << "Aircraft" << aircraft.planId << "entered Hanoi";
+            } else if (!isPointInPolygon(newPos, m_hanoiPolygon) && aircraft.isInsideHanoi) {
+                aircraft.isInsideHanoi = false;
+                aircraft.outTime = QDateTime::currentDateTime();
+                qDebug() << "Aircraft" << aircraft.planId << "left Hanoi";
             }
-            // emit change
+
             QModelIndex idx = index(i);
-            emit dataChanged(idx, idx, {CoordinateRole,InsideHanoiRole,RotationRole});
+            emit dataChanged(idx, idx, {CoordinateRole, InsideHanoiRole});
         }
     }
+}
+
+void AircraftModel::startAircraft(int index) {
+    if (index >= 0 && index < m_aircrafts.size()) {
+        m_running[index] = true;
+        emit dataChanged(this->index(index), this->index(index));
+    }
+}
+
+void AircraftModel::stopAircraft(int index) {
+    if (index >= 0 && index < m_aircrafts.size()) {
+        m_running[index] = false;
+        emit dataChanged(this->index(index), this->index(index));
+    }
+}
+
+void AircraftModel::addAircraft(QString planeId,QGeoCoordinate startPoint,QGeoCoordinate endPoint) {
+    beginInsertRows(QModelIndex(), m_aircrafts.size(), m_aircrafts.size());
+    QList<QGeoCoordinate> routes = {startPoint};
+    double rotation = qAtan2(endPoint.longitude() - startPoint.longitude(),
+                             endPoint.latitude()  - startPoint.latitude()) * 180.0 / M_PI;
+    m_aircrafts.append({"0",planeId,startPoint,endPoint,QDateTime::currentDateTime(),QDateTime::currentDateTime(),startPoint,rotation,routes});
+    m_progress.append(0.0);
+    m_running.append(false);
+    endInsertRows();
 }
 
 void AircraftModel::resetProgress(int index) {
     if (index >= 0 && index < m_aircrafts.size()) {
         m_progress[index] = 0.0;
+        m_running[index]=true;
         m_aircrafts[index].currentCoordinate = m_aircrafts[index].startPoint;
         m_aircrafts[index].route.clear();
         m_aircrafts[index].isInsideHanoi = false;
@@ -101,12 +154,12 @@ void AircraftModel::resetProgress(int index) {
 }
 
 void AircraftModel::updateFlights(int index,QGeoCoordinate startPoint,QGeoCoordinate endPoint){
-    qDebug() << "I'm not here" << index << " " << startPoint <<" " << endPoint;
     if (index >= 0 && index < m_aircrafts.size()) {
-        qDebug() << "Update Flight with" <<startPoint<<" "<<endPoint;
         m_aircrafts[index].startPoint=startPoint;
         m_aircrafts[index].endPoint=endPoint;
         m_progress[index] = 0.0;
+        m_running[index]=true;
+        m_aircrafts[index].isFinished=false;
         m_aircrafts[index].currentCoordinate = startPoint;
         m_aircrafts[index].route.clear();
         m_aircrafts[index].isInsideHanoi = false;

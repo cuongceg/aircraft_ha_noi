@@ -18,7 +18,9 @@ struct AircraftData {
     double rotation = 0.0;
     QList<QGeoCoordinate> route;
     bool isInsideHanoi = false;
+    bool isFinished = false;
 };
+
 
 class AircraftModel : public QAbstractListModel
 {
@@ -42,6 +44,9 @@ public:
     Q_INVOKABLE void updatePositions();
     Q_INVOKABLE void resetProgress(int index);
     Q_INVOKABLE void updateFlights(int index,QGeoCoordinate startPoint,QGeoCoordinate endPoint);
+    Q_INVOKABLE void addAircraft(QString planeId,QGeoCoordinate startPoint,QGeoCoordinate endPoint);
+    Q_INVOKABLE void startAircraft(int index);
+    Q_INVOKABLE void stopAircraft(int index);
     void setPolygon(QList<QGeoCoordinate>& hanoiPolygon);
     void getStartAndEndPoint();
 
@@ -49,6 +54,7 @@ private:
     QList<AircraftData> m_aircrafts;
     QList<double> m_progress;
     QList<QGeoCoordinate> m_hanoiPolygon;
+    QVector<bool> m_running;
 };
 
 #endif // AIRCRAFT_H
