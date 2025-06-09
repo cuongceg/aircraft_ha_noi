@@ -5,9 +5,11 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 Item {
+    id:map
     property int selectedAircraftIndex: -1
     property var selectedCoordinate: undefined
     property string selectingPoint: ""
+    property string selectingPointDialog: ""
     property var startCoordinate
     property var endCoordinate
     property bool isHideMarker: true
@@ -30,24 +32,45 @@ Item {
         zoomLevel: 7
         activeMapType: mapview.supportedMapTypes[mapview.supportedMapTypes.length-1]
 
+        Loader{
+            id: addLoader
+        }
+
         MouseArea{
             anchors.fill: parent
             z:1
-            acceptedButtons: Qt.LeftButton
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked:{
-                if (selectingPoint === "start") {
-                    startCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                    selectingPoint = ""
-                    selectHint.visible = false
-                    editDialog.visible = true
-                } else if (selectingPoint === "end") {
-                    endCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                    selectingPoint = ""
-                    selectHint.visible = false
-                    editDialog.visible = true
-                }else{
-                    selectedAircraftIndex=-1
-                    selectedCoordinate=undefined}
+                if(mouse.button === Qt.LeftButton){
+                    if (selectingPoint === "start") {
+                        startCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
+                        selectingPoint = ""
+                        selectHint.visible = false
+                        editDialog.visible = true
+                    } else if (selectingPoint === "end") {
+                        endCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
+                        selectingPoint = ""
+                        selectHint.visible = false
+                        editDialog.visible = true
+                    }else if (selectingPointDialog === "start"){
+                        addLoader.item.startPoint = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
+                        selectHint.visible = false
+                        selectingPointDialog=""
+                        addLoader.item.open()
+                    }else if (selectingPointDialog === "end"){
+                        addLoader.item.endPoint = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
+                        selectHint.visible = false
+                        selectingPointDialog=""
+                        addLoader.item.open()
+                    }else{
+                        selectedAircraftIndex=-1
+                        selectedCoordinate=undefined
+                    }
+                }else if(mouse.button === Qt.RightButton){
+                    mapDialog.visible = true
+                    mapDialog.x=mouse.x
+                    mapDialog.y=mouse.y
+                }
             }
         }
         MapPolygon {
@@ -56,7 +79,7 @@ Item {
             border.width: 2
             border.color: "green"
         }
-        Repeater {
+        Instantiator {
             model: aircraftModel
             delegate: MapQuickItem {
                 coordinate: model.coordinate
@@ -99,8 +122,8 @@ Item {
 
                 Popup {
                     id: contextMenu
-                    width: 150
-                    height: 80
+                    width: 160
+                    height: 150
                     modal: true
                     focus: true
                     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -112,6 +135,30 @@ Item {
                     }
                     contentItem: ColumnLayout{
                         anchors.fill: parent
+                        Button {
+                            text: "Bat dau"
+                            width:100
+                            height:20
+                            background: Rectangle {
+                                color: "white"
+                            }
+                            onClicked: {
+                                contextMenu.visible = false
+                                aircraftModel.startAircraft(index)
+                            }
+                        }
+                        Button {
+                            text: "Dung"
+                            width:100
+                            height:20
+                            background: Rectangle {
+                                color: "white"
+                            }
+                            onClicked: {
+                                contextMenu.visible = false
+                                aircraftModel.stopAircraft(index)
+                            }
+                        }
                         Button {
                             text: "Chạy lại"
                             width:100
@@ -147,7 +194,11 @@ Item {
                         selectedCoordinate = coordinate;
                 }
             }
+
+            onObjectAdded: mapview.addMapItem(object)
+            onObjectRemoved: mapview.removeMapItem(object)
         }
+
 
         Popup {
             id: editDialog
@@ -194,7 +245,6 @@ Item {
                     }
                 }
 
-                // End point
                 RowLayout{
                     spacing: 10
                     Text {
@@ -219,7 +269,6 @@ Item {
                     }
                 }
 
-                //Save button
                 Button {
                     text: "Lưu"
                     width:60
@@ -240,6 +289,56 @@ Item {
             }
         }
 
+        Popup{
+            id: mapDialog
+            width: 150
+            height: 80
+            modal: true
+            focus: true
+
+            background: Rectangle {
+                color: "white"
+                radius: 12
+                border.color: "gray"
+                border.width: 1
+            }
+
+            contentItem: ColumnLayout{
+                anchors.fill: parent
+                spacing:4
+                Button {
+                    text: "Them may bay"
+                    width:100
+                    height:20
+                    background: Rectangle {
+                        color: "white"
+                    }
+                    onClicked: {
+                        mapDialog.visible=false
+                        addLoader.source="../Component/AddFlightDialog.qml"
+                        addLoader.item.open()
+                        addLoader.item.onChooseStartPoint.connect(function() {
+                            map.selectingPointDialog ="start"
+                            selectHint.visible=true
+                        })
+
+                        addLoader.item.onChooseEndPoint.connect(function() {
+                            map.selectingPointDialog ="end"
+                            selectHint.visible=true
+                        })
+
+                        addLoader.item.onChooseEndPoint.connect(function() {
+                            map.selectingPointDialog ="end"
+                            selectHint.visible=true
+                        })
+
+                        addLoader.item.onSaveClicked.connect(function(flightId, startPoint,endPoint){
+                            aircraftModel.addAircraft(flightId,startPoint,endPoint)
+                        })
+                    }
+                }
+            }
+        }
 
         MapQuickItem {
             id: markerStart
@@ -278,11 +377,12 @@ Item {
             visible: false
             z: 99
             anchors.top: parent.top
-            anchors.topMargin: 40
+            anchors.topMargin: 20
 
             Text {
                 anchors.centerIn: parent
-                text: "Click lên bản đồ để chọn " + (selectingPoint === "start" ? "điểm bắt đầu" : "điểm kết thúc")
+                text: "Click lên bản đồ để chọn " + (selectingPoint === "start" ? "điểm bắt đầu" : (selectingPoint === "end" ? "điểm kết thúc" :""))
+                      + (selectingPointDialog === "start" ? "điểm bắt đầu" : (selectingPointDialog === "end"?"điểm kết thúc":""))
                 color: "black"
             }
         }
