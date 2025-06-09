@@ -34,7 +34,7 @@ Item {
                 }
 
                 Label {
-                    text: root.title
+                    text: root.planeId
                     font.pointSize: 13
                     color: "#666"
                     Layout.alignment: Qt.AlignHCenter
@@ -53,7 +53,7 @@ Item {
                 }
 
                 Label {
-                    text: root.subtitle
+                    text: root.inTime
                     font.pointSize: 13
                     color: "#666"
                     Layout.alignment: Qt.AlignHCenter
@@ -72,7 +72,7 @@ Item {
                 }
 
                 Label {
-                    text: root.subtitle
+                    text: root.outTime
                     font.pointSize: 13
                     color: "#666"
                     Layout.alignment: Qt.AlignHCenter
@@ -90,6 +90,10 @@ Item {
         }
     }
 
-    property string title
-    property string subtitle
+    property string planeId
+    property string inTime
+    property string outTime
+    property var route
+    property var startCoordinate
+    property var endCoordinate
 }
