@@ -8,5 +8,11 @@
         <file>assets/aircraft_blue.png</file>
         <file>assets/marker_begin.png</file>
         <file>assets/marker_end.png</file>
+        <file>qml/Screen/MapScreen.qml</file>
+        <file>qml/Screen/SearchScreen.qml</file>
+        <file>qml/Component/CalendarDialog.qml</file>
+        <file>qml/Component/FlightCard.qml</file>
+        <file>qml/Component/AddFlightDialog.qml</file>
+        <file>qml/Screen/RouteMap.qml</file>
     </qresource>
 </RCC>
