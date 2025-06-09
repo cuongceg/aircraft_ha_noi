@@ -67,12 +67,53 @@ QList<Flight> FlightDatabaseManager::loadAllFlights() {
         flight.inTime = query.value(4).toDateTime();
         flight.outTime = query.value(5).toDateTime();
         flight.route = parseWKTLineString(query.value(6).toString());
-
         flights.append(flight);
     }
 
     return flights;
 }
+
+QList<Flight> FlightDatabaseManager::searchFlights(const QString &keyword, const QDate &date) {
+    QList<Flight> flights;
+
+    QString queryStr = R"(
+        SELECT id, plan_id, ST_AsText(start_point), ST_AsText(end_point),
+               in_time, out_time, ST_AsText(routes)
+        FROM flight
+        WHERE plan_id ILIKE :keyword
+    )";
+
+    if (date.isValid()) {
+        queryStr += " AND DATE(in_time) = :date";
+    }
+
+    QSqlQuery query;
+    query.prepare(queryStr);
+    query.bindValue(":keyword", "%" + keyword + "%");
+    if (date.isValid()) {
+        query.bindValue(":date", date);
+    }
+
+    if (!query.exec()) {
+        qWarning() << "Flight query failed:" << query.lastError().text();
+        return flights;
+    }
+
+    while (query.next()) {
+        Flight flight;
+        flight.id = query.value(0).toInt();
+        flight.planId = query.value(1).toString();
+        flight.startPoint = parseWKTPoint(query.value(2).toString());
+        flight.endPoint = parseWKTPoint(query.value(3).toString());
+        flight.inTime = query.value(4).toDateTime();
+        flight.outTime = query.value(5).toDateTime();
+        flight.route = parseWKTLineString(query.value(6).toString());
+        flights.append(flight);
+    }
+
+    return flights;
+}
+
 
 QGeoCoordinate FlightDatabaseManager::parseWKTPoint(const QString &wkt) {
     QRegularExpression re("POINT\\(([-\\d\\.]+) ([-\\d\\.]+)\\)");
@@ -83,18 +124,26 @@ QGeoCoordinate FlightDatabaseManager::parseWKTPoint(const QString &wkt) {
 }
 
 QList<QGeoCoordinate> FlightDatabaseManager::parseWKTLineString(const QString &wkt) {
-    QList<QGeoCoordinate> coords;
-    QRegularExpression re("LINESTRING\\(([^\\)]+)\\)");
-    auto match = re.match(wkt);
-    if (match.hasMatch()) {
-        QStringList pairs = match.captured(1).split(", ");
-        for (const QString &pair : pairs) {
-            auto parts = pair.split(" ");
-            if (parts.size() == 2)
-                coords.append(QGeoCoordinate(parts[1].toDouble(), parts[0].toDouble()));
+    QList<QGeoCoordinate> coordinates;
+    if (!wkt.startsWith("LINESTRING(") || !wkt.endsWith(")"))
+        return coordinates;
+    QString content = wkt.mid(QString("LINESTRING(").length());
+    content.chop(1); // Bỏ dấu ")"
+    QStringList coordPairs = content.split(",", Qt::SkipEmptyParts);
+    for (const QString& pair : coordPairs) {
+        QString trimmed = pair.trimmed();
+        QStringList lonLat = trimmed.split(QRegExp("\\s+"), Qt::SkipEmptyParts);
+        if (lonLat.size() == 2) {
+            bool lonOk, latOk;
+            double lon = lonLat[0].toDouble(&lonOk);
+            double lat = lonLat[1].toDouble(&latOk);
+            if (lonOk && latOk) {
+                coordinates.append(QGeoCoordinate(lat, lon));
+            }
         }
     }
-    return coords;
+
+    return coordinates;
 }
 
 QString FlightDatabaseManager::geoCoordinateToWKT(const QGeoCoordinate &coord) {

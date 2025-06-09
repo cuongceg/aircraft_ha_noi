@@ -17,6 +17,7 @@ public:
 
     bool insertFlight(const Flight &flight);
     QList<Flight> loadAllFlights();
+    QList<Flight> searchFlights(const QString &keyword, const QDate &date);
 
 private:
     QSqlDatabase m_db;
