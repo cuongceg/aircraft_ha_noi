@@ -4,6 +4,9 @@
 #include "PolygonLoader.h"
 #include "AircraftManager.h"
 #include "FlightDatabaseManager.h"
+#include "FlightModel.h"
+#include "PolygonModel.h"
+#include "FlightLoader.h"
 #include <QGeoCoordinate>
 #include <QTimer>
 #include <QDebug>
@@ -27,20 +30,24 @@ int main(int argc, char *argv[])
         },
         Qt::QueuedConnection);
     PolygonLoader loader;
+    FlightLoader flightLoader;
     AircraftModel aircraftModel;
-    FlightDatabaseManager dbManager;
+    PolygonModel polygonModel;
+    FlightModel flightModel;
+    //FlightDatabaseManager dbManager;
+    AircraftData aircraft = flightLoader.loadAircraftFromJson("/home/domanhcuong/development/C++/QT/aircraft_hanoi/data/plan1.json");
     QList<QGeoCoordinate> hanoiPolygon = loader.loadHanoiPolygon("/home/domanhcuong/development/C++/QT/aircraft_hanoi/data/hanoi.json");
-    aircraftModel.setPolygon(hanoiPolygon);
-    aircraftModel.getStartAndEndPoint();
+    aircraftModel.addAircraft(aircraft);
     engine.rootContext()->setContextProperty("hanoiPolygon", QVariant::fromValue(hanoiPolygon));
     engine.rootContext()->setContextProperty("aircraftModel", &aircraftModel);
+    engine.rootContext()->setContextProperty("flightModel", &flightModel);
+    engine.rootContext()->setContextProperty("polygonModel", &polygonModel);
     engine.load(url);
     QTimer timer;
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         aircraftModel.updatePositions();
     });
     timer.start(1000);
-
     //dbManager.connectToDatabase("localhost",5432,"aircraft","cuongceg","cuong1708");
     return app.exec();
 }
