@@ -5,9 +5,6 @@ import QtPositioning 5.15
 
 Item {
     id: routeMap
-    anchors.fill: parent
-
-    // ==== Đầu vào ====
     property var routeCoordinates: []
     property var startCoordinate
     property var endCoordinate
