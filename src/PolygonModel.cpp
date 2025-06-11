@@ -1,5 +1,6 @@
 #include "PolygonModel.h"
 #include <QPolygonF>
+#include <QDebug>
 
 PolygonModel::PolygonModel(QObject* parent)
     : QAbstractListModel(parent)
@@ -62,4 +63,19 @@ bool PolygonModel::isInsidePolygons(const QGeoCoordinate &point){
         if(qtPolygon.containsPoint(pt, Qt::OddEvenFill))return true;
     }
     return false;
+}
+
+void PolygonModel::updatePolygon(const QVariantList& coordinateList,int index){
+    if(index >= 0 && index < m_polygons.size()){
+        PolygonData polygon;
+        for (const QVariant& coordVar : coordinateList) {
+            QVariantMap map = coordVar.toMap();
+            double lat = map["latitude"].toDouble();
+            double lon = map["longitude"].toDouble();
+            polygon.path.append(QGeoCoordinate(lat, lon));
+        }
+        m_polygons[index]=polygon;
+        emit dataChanged(this->index(index), this->index(index),{PathRole});
+        qDebug() << index <<" "<<m_polygons.size();
+    }
 }
