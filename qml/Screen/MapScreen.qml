@@ -8,11 +8,10 @@ Item {
     id:map
     property int selectedAircraftIndex: -1
     property var selectedCoordinate: undefined
-    property string selectingPoint: ""
-    property string selectingPointDialog: ""
-    property var startCoordinate
-    property var endCoordinate
-    property bool isHideMarker: true
+    property var selectedPlaneId: undefined
+    property var selectedStartTime: undefined
+    property var selectedEndTime: undefined
+    property var selectedRoutes: []
     Plugin {
         id: osmPlugin
         name: "osm"
@@ -42,30 +41,12 @@ Item {
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked:{
                 if(mouse.button === Qt.LeftButton){
-                    if (selectingPoint === "start") {
-                        startCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                        selectingPoint = ""
-                        selectHint.visible = false
-                        editDialog.visible = true
-                    } else if (selectingPoint === "end") {
-                        endCoordinate = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                        selectingPoint = ""
-                        selectHint.visible = false
-                        editDialog.visible = true
-                    }else if (selectingPointDialog === "start"){
-                        addLoader.item.startPoint = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                        selectHint.visible = false
-                        selectingPointDialog=""
-                        addLoader.item.open()
-                    }else if (selectingPointDialog === "end"){
-                        addLoader.item.endPoint = mapview.toCoordinate(Qt.point(mouse.x, mouse.y))
-                        selectHint.visible = false
-                        selectingPointDialog=""
-                        addLoader.item.open()
-                    }else{
-                        selectedAircraftIndex=-1
-                        selectedCoordinate=undefined
-                    }
+                    selectedAircraftIndex=-1
+                    selectedCoordinate=undefined
+                    routePath.path = []
+                    selectedRoutes = []
+                    markerStart.visible=false
+                    markerEnd.visible=false
                 }else if(mouse.button === Qt.RightButton){
                     mapDialog.visible = true
                     mapDialog.x=mouse.x
@@ -79,12 +60,42 @@ Item {
             border.width: 2
             border.color: "green"
         }
+
+        Instantiator{
+            model: polygonModel
+            delegate: MapPolygon{
+                path: model.path.map(c => QtPositioning.coordinate(c.latitude, c.longitude))
+                color: "#2200ff00"
+                border.width: 2
+                z:100
+                border.color: "green"
+
+                MouseArea{
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    z:101
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: {
+                        console.log("Tap")
+                        stackView.push("AddPolygonMap.qml",{
+                                           isChanged:true,
+                                           initialPathPoints :model.path.map(c => QtPositioning.coordinate(c.latitude, c.longitude)),
+                                           aircraftIndex: index
+                                       })
+                    }
+                }
+            }
+            onObjectAdded: mapview.addMapItem(object)
+            onObjectRemoved: mapview.removeMapItem(object)
+        }
+
+
         Instantiator {
             model: aircraftModel
             delegate: MapQuickItem {
                 coordinate: model.coordinate
-                z:2
                 rotation: model.rotation
+                z:2
                 anchorPoint.x: image.width / 2
                 anchorPoint.y: image.height / 2
 
@@ -106,13 +117,30 @@ Item {
                                       if (selectedAircraftIndex === index) {
                                           selectedAircraftIndex = -1;
                                           selectedCoordinate = undefined;
+                                          routePath.path = []
+                                          selectedRoutes = []
+                                          markerStart.visible=false
+                                          markerEnd.visible=false
                                       } else {
                                           selectedAircraftIndex = index;
                                           selectedCoordinate = model.coordinate;
+                                          routePath.path = model.routes
+                                          selectedRoutes = model.routes
+                                          selectedPlaneId = model.planeId
+                                          selectedEndTime = Qt.formatDateTime(model.endTime, "hh:mm:ss dd/MM/yyyy")
+                                          selectedStartTime = Qt.formatDateTime(model.startTime, "hh:mm:ss dd/MM/yyyy")
+                                          markerStart.coordinate = model.startPoint
+                                          markerEnd.coordinate = model.endPoint
+                                          markerStart.visible=true
+                                          markerEnd.visible=true
                                       }
                                   }else{
                                       selectedAircraftIndex = index;
                                       selectedCoordinate = model.coordinate;
+                                      selectedRoutes = model.routes
+                                      selectedPlaneId = model.planeId
+                                      selectedEndTime = Qt.formatDateTime(model.endTime, "hh:mm:ss dd/MM/yyyy")
+                                      selectedStartTime = Qt.formatDateTime(model.startTime, "hh:mm:ss dd/MM/yyyy")
                                       contextMenu.x = mouse.x
                                       contextMenu.y = mouse.y
                                       contextMenu.visible = true
@@ -179,11 +207,11 @@ Item {
                                 color: "white"
                             }
                             onClicked: {
-                                contextMenu.visible = false
-                                editDialog.visible = true
-                                isHideMarker = false
-                                startCoordinate=model.startPoint
-                                endCoordinate=model.endPoint
+                                contextMenu.visible=false
+                                stackView.push("ChangeRouteMap.qml",{
+                                                   initialPathPoints :selectedRoutes,
+                                                   aircraftIndex: selectedAircraftIndex
+                                               })
                             }
                         }
                     }
@@ -194,99 +222,8 @@ Item {
                         selectedCoordinate = coordinate;
                 }
             }
-
             onObjectAdded: mapview.addMapItem(object)
             onObjectRemoved: mapview.removeMapItem(object)
-        }
-
-
-        Popup {
-            id: editDialog
-            width: 300
-            height: 150
-            anchors.centerIn: Overlay.overlay
-            modal: true
-            focus: true
-
-            background: Rectangle {
-                color: "white"
-                radius: 12
-                border.color: "gray"
-                border.width: 1
-            }
-
-            contentItem: Column{
-                anchors.fill: parent
-                anchors.margins: 16
-                spacing: 10
-
-                // Điểm bắt đầu
-                RowLayout{
-                    spacing: 10
-                    Text {
-                        text: "Điểm bắt đầu: " + (startCoordinate
-                            ? startCoordinate.latitude.toFixed(2) + ", " + startCoordinate.longitude.toFixed(2)
-                            : "Chưa chọn")
-                        color: "black"
-                    }
-                    Button {
-                        text: "\u270E"
-                        width:20
-                        height:20
-                        background: Rectangle {
-                                color: "lightblue"
-                                radius: 8
-                        }
-                        onClicked: {
-                            selectingPoint = "start"
-                            editDialog.visible = false
-                            selectHint.visible = true
-                        }
-                    }
-                }
-
-                RowLayout{
-                    spacing: 10
-                    Text {
-                        text: "Điểm kết thúc: " + (endCoordinate
-                            ? endCoordinate.latitude.toFixed(2) + ", " + endCoordinate.longitude.toFixed(2)
-                            : "Chưa chọn")
-                        color: "black"
-                    }
-                    Button {
-                        text: "\u270E"
-                        width:20
-                        height:20
-                        background: Rectangle {
-                            color: "lightblue"
-                            radius: 8
-                        }
-                        onClicked: {
-                            selectingPoint = "end"
-                            editDialog.visible = false
-                            selectHint.visible = true
-                        }
-                    }
-                }
-
-                Button {
-                    text: "Lưu"
-                    width:60
-                    height:40
-                    background: Rectangle {
-                        color: "lightblue"
-                        radius: 8
-                    }
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    onClicked: {
-                        aircraftModel.updateFlights(selectedAircraftIndex,startCoordinate,endCoordinate)
-                        selectedAircraftIndex=-1
-                        startCoordinate=undefined
-                        isHideMarker = true
-                        editDialog.visible = false
-                    }
-                }
-            }
         }
 
         Popup{
@@ -314,38 +251,40 @@ Item {
                         color: "white"
                     }
                     onClicked: {
+                        stackView.push("ChangeRouteMap.qml",{
+                                       isCreated: true
+                                       })
+                    }
+                }
+
+                Button {
+                    text: "Them vung"
+                    width:100
+                    height:20
+                    background: Rectangle {
+                        color: "white"
+                    }
+                    onClicked: {
                         mapDialog.visible=false
-                        addLoader.source="../Component/AddFlightDialog.qml"
-                        addLoader.item.open()
-                        addLoader.item.onChooseStartPoint.connect(function() {
-                            map.selectingPointDialog ="start"
-                            selectHint.visible=true
-                        })
-
-                        addLoader.item.onChooseEndPoint.connect(function() {
-                            map.selectingPointDialog ="end"
-                            selectHint.visible=true
-                        })
-
-                        addLoader.item.onChooseEndPoint.connect(function() {
-                            map.selectingPointDialog ="end"
-                            selectHint.visible=true
-                        })
-
-                        addLoader.item.onSaveClicked.connect(function(flightId, startPoint,endPoint){
-                            aircraftModel.addAircraft(flightId,startPoint,endPoint)
-                        })
+                        stackView.push("AddPolygonMap.qml")
                     }
                 }
             }
+        }
+
+
+        MapPolyline {
+            id: routePath
+            line.width: 4
+            line.color: "#646464"
+            path: []
         }
 
         MapQuickItem {
             id: markerStart
             anchorPoint.x: imageMarkerBegin.width / 2
             anchorPoint.y: imageMarkerBegin.height
-            coordinate: startCoordinate
-            visible: startCoordinate !== undefined && !isHideMarker
+            coordinate: QtPositioning.coordinate(0, 0)
             sourceItem: Image {
                 id: imageMarkerBegin
                 source: "qrc:/assets/marker_begin.png"
@@ -358,8 +297,7 @@ Item {
             id: markerEnd
             anchorPoint.x: imageMarkerEnd.width / 2
             anchorPoint.y: imageMarkerEnd.height
-            coordinate: endCoordinate
-            visible: endCoordinate !== undefined && !isHideMarker
+            coordinate: QtPositioning.coordinate(0, 0)
             sourceItem: Image {
                 id: imageMarkerEnd
                 source: "qrc:/assets/marker_end.png"
@@ -368,24 +306,23 @@ Item {
             }
         }
 
+        // Rectangle {
+        //     id: selectHint
+        //     width: parent.width
+        //     height: 30
+        //     color: "#ffc"
+        //     visible: false
+        //     z: 99
+        //     anchors.top: parent.top
+        //     anchors.topMargin: 20
 
-        Rectangle {
-            id: selectHint
-            width: parent.width
-            height: 30
-            color: "#ffc"
-            visible: false
-            z: 99
-            anchors.top: parent.top
-            anchors.topMargin: 20
-
-            Text {
-                anchors.centerIn: parent
-                text: "Click lên bản đồ để chọn " + (selectingPoint === "start" ? "điểm bắt đầu" : (selectingPoint === "end" ? "điểm kết thúc" :""))
-                      + (selectingPointDialog === "start" ? "điểm bắt đầu" : (selectingPointDialog === "end"?"điểm kết thúc":""))
-                color: "black"
-            }
-        }
+        //     Text {
+        //         anchors.centerIn: parent
+        //         text: "Click lên bản đồ để chọn " + (selectingPoint === "start" ? "điểm bắt đầu" : (selectingPoint === "end" ? "điểm kết thúc" :""))
+        //               + (selectingPointDialog === "start" ? "điểm bắt đầu" : (selectingPointDialog === "end"?"điểm kết thúc":""))
+        //         color: "black"
+        //     }
+        // }
 
         Rectangle {
             id: statusBar
@@ -400,11 +337,12 @@ Item {
                 anchors.centerIn: parent
                 id: coordLabel
                 text: selectedCoordinate
-                      ? "Kinh độ: " + selectedCoordinate.longitude.toFixed(2) +
-                        "  |  Vĩ độ: " + selectedCoordinate.latitude.toFixed(2)
+                      ? "Ma may bay:"+ selectedPlaneId +"| Kinh độ: " + selectedCoordinate.longitude.toFixed(2) +
+                        "  |  Vĩ độ: " + selectedCoordinate.latitude.toFixed(2) + "| Thoi gian bat dau: " +selectedStartTime+"| Thoi gian ket thuc: "+selectedEndTime
                       : ""
                 color: "white"
             }
         }
     }
 }
+
