@@ -12,7 +12,8 @@
         <file>qml/Screen/SearchScreen.qml</file>
         <file>qml/Component/CalendarDialog.qml</file>
         <file>qml/Component/FlightCard.qml</file>
-        <file>qml/Component/AddFlightDialog.qml</file>
         <file>qml/Screen/RouteMap.qml</file>
+        <file>qml/Screen/ChangeRouteMap.qml</file>
+        <file>qml/Screen/AddPolygonMap.qml</file>
     </qresource>
 </RCC>

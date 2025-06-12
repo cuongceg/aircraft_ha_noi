@@ -2,12 +2,16 @@ import QtQuick 2.15
 import QtLocation 5.14
 import QtPositioning 5.14
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Item {
+    id: root
     visible: true
     property int currentIndex: -1
     property var initialPathPoints: []
     property var aircraftIndex
+    property string flightId: ""
+    property bool isCreated: false
 
     Plugin {
         id: osmPlugin
@@ -90,6 +94,51 @@ Item {
 
         Component.onCompleted: {
             loadInitialPath(initialPathPoints);
+        }
+    }
+
+    Rectangle{
+        width: 100
+        height: parent.height
+        visible: isCreated
+        Column{
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 10
+
+            RowLayout{
+                spacing: 10
+                Text {
+                    text: "Mã máy bay"
+                }
+                TextField {
+                    id: flightIdInput
+                    placeholderText: "Nhập mã máy bay"
+                    text: root.flightId
+                    onTextChanged: root.flightId = text
+                    background: Rectangle {
+                        color: "white"
+                        radius: 12
+                        border.color: "grey"
+                        border.width: 1
+                    }
+                }
+            }
+
+            Button {
+                text: "Lưu"
+                width:60
+                height:40
+                background: Rectangle {
+                    color: "lightblue"
+                    radius: 8
+                }
+                anchors.horizontalCenter: parent.horizontalCenter
+                onClicked: {
+                    aircraftModel.addAircraft(flightId,getCurrentPath())
+                    stackView.pop()
+                }
+            }
         }
     }
 

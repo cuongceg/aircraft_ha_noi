@@ -7,7 +7,8 @@ Item {
     visible: true
     property int currentIndex: -1
     property var initialPathPoints: []
-    property var aircraftIndex
+    property int aircraftIndex: -1
+    property bool isChanged:false
 
     Plugin {
         id: osmPlugin
@@ -56,8 +57,21 @@ Item {
         MapPolygon{
             id: polygon
             border.color: "green"
-            border.width: 10
+            border.width: 2
         }
+        MapItemView{
+            id:oldPolygon
+            model: polygonModel
+            delegate: MapPolygon{
+                path: model.path.map(c => QtPositioning.coordinate(c.latitude, c.longitude))
+                color: "#2200ff00"
+                border.width: 2
+                z:100
+                border.color: "green"
+            }
+
+        }
+
         MouseArea{
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
@@ -98,7 +112,14 @@ Item {
         anchors.right: parent.right
         text: "Thêm polygon"
         onClicked: {
-            polygonModel.addPolygon(getCurrentPath())
+            if(isChanged){
+                console.log("Tap here")
+                polygonModel.updatePolygon(getCurrentPath(),aircraftIndex)
+            }else{
+                console.log("Tap here 2")
+                polygonModel.addPolygon(getCurrentPath())
+            }
+
             stackView.pop()
         }
     }
