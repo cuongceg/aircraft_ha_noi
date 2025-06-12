@@ -3,7 +3,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <QGeoCoordinate>
-#include "Flight.h"
+#include "../model/Flight.h"
 class FlightDatabaseManager : public QObject
 {
     Q_OBJECT
@@ -15,16 +15,12 @@ public:
                            const QString &dbName,
                            const QString &user, const QString &password);
 
-    bool insertFlight(const Flight &flight);
-    QList<Flight> loadAllFlights();
-    QList<Flight> searchFlights(const QString &keyword, const QDate &date);
+    bool insertFlight(const QString &planeId, const QDateTime &startTime, const QDateTime &endTime, const QString &pathWKT);
+    QVector<FlightData> getAllFlights();
+    //QList<Flight> searchFlights(const QString &keyword, const QDate &date);
 
 private:
     QSqlDatabase m_db;
-
-    QGeoCoordinate parseWKTPoint(const QString &wkt);
-    QList<QGeoCoordinate> parseWKTLineString(const QString &wkt);
-    QString geoCoordinateToWKT(const QGeoCoordinate &coord);
-    QString routeToWKTLineString(const QList<QGeoCoordinate> &route);
+    QVector<WayPoint> parseWKTLineString(const QString &wkt);
 };
 #endif // FLIGHTDATABASEMANAGER_H

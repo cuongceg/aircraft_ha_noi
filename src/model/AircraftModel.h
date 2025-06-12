@@ -6,19 +6,18 @@
 #include <QGeoCoordinate>
 #include<QDateTime>
 #include<QDebug>
+#include <QtConcurrent/QtConcurrent>
+#include"PolygonModel.h"
+#include "../services/FlightDatabaseManager.h"
 
 struct AircraftData {
-    QString id;
-    QString planId;
-    QGeoCoordinate startPoint;
-    QGeoCoordinate endPoint;
-    QDateTime inTime;
-    QDateTime outTime;
-    QGeoCoordinate currentCoordinate;
-    double rotation = 0.0;
-    QList<QGeoCoordinate> route;
-    bool isInsideHanoi = false;
-    bool isFinished = false;
+    QString icao24;
+    QDateTime startTime;
+    QDateTime endTime;
+    QGeoCoordinate current;
+    QVector<WayPoint>path;
+    double rotation =0.0;
+    bool isInsideHanoi=false;
 };
 
 
@@ -29,9 +28,13 @@ public:
     enum Roles {
         CoordinateRole = Qt::UserRole + 1,
         InsideHanoiRole,
-        RotationRole,
+        RouteRole,
         StartPointRole,
-        EndPointRole
+        EndPointRole,
+        RotationRole,
+        StartTimeRole,
+        EndTimeRole,
+        PlaneIdRole
     };
 
     explicit AircraftModel(QObject *parent = nullptr);
@@ -42,19 +45,20 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void updatePositions();
-    Q_INVOKABLE void resetProgress(int index);
-    Q_INVOKABLE void updateFlights(int index,QGeoCoordinate startPoint,QGeoCoordinate endPoint);
-    Q_INVOKABLE void addAircraft(QString planeId,QGeoCoordinate startPoint,QGeoCoordinate endPoint);
     Q_INVOKABLE void startAircraft(int index);
     Q_INVOKABLE void stopAircraft(int index);
-    void setPolygon(QList<QGeoCoordinate>& hanoiPolygon);
-    void getStartAndEndPoint();
+    Q_INVOKABLE void resetProgress(int index);
+    Q_INVOKABLE void updateFlight(int index, const QVariantList &pathList);
+    Q_INVOKABLE void addAircraft(QString icao24,const QVariantList &pathList);
+    void loadDataAsync();
+    void setPolygonModel(PolygonModel* polygonModel);
 
 private:
-    QList<AircraftData> m_aircrafts;
-    QList<double> m_progress;
-    QList<QGeoCoordinate> m_hanoiPolygon;
+    PolygonModel* m_polygonModel = nullptr;
+    QVector<AircraftData> m_aircrafts;
+    QList<int> m_progress;
     QVector<bool> m_running;
+    AircraftData convertToAircraftData(const FlightData &flight);
 };
 
 #endif // AIRCRAFT_H
